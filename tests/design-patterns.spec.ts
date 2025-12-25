@@ -71,7 +71,7 @@ test.describe('Design Patterns Demo', () => {
         const page = await browserManager.getPage();
 
         // Builder pattern usage
-        const user = new UserBuilder().withRandomData().build();
+        const user = UserBuilder.generateRandom();
 
         //Template Method Pattern usage
         const purchaseFlow = new PurchaseMonitorFlow(page, user);
