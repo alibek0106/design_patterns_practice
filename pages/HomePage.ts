@@ -1,96 +1,201 @@
 import { BasePage } from './BasePage';
-import { LogAction } from '../patterns/decorator/PageDecorator';
 import { Page, Locator } from '@playwright/test';
 
 export class HomePage extends BasePage {
-    // 1. Define properties for Locators
+    protected readonly pageUrl = '/index.html';
+
+    // Group related locators with comments
+    // Navigation Links
     private readonly signUpLink: Locator;
     private readonly loginLink: Locator;
     private readonly monitorsLink: Locator;
+    private readonly laptopsLink: Locator;
+    private readonly phonesLink: Locator;
 
-    // Sign Up Modal Elements
+    // Sign Up Modal
     private readonly signUpModal: Locator;
     private readonly signUpUsernameInput: Locator;
     private readonly signUpPasswordInput: Locator;
     private readonly signUpButton: Locator;
+    private readonly signUpCloseButton: Locator;
 
-    // Login Modal Elements
+    // Login Modal
     private readonly loginModal: Locator;
     private readonly loginUsernameInput: Locator;
     private readonly loginPasswordInput: Locator;
     private readonly loginButton: Locator;
+    private readonly loginCloseButton: Locator;
 
-    // Welcome Message
+    // User State
     private readonly welcomeMessage: Locator;
+    private readonly logoutLink: Locator;
+
+    // Product Catalog
+    private readonly productCards: Locator;
+    private readonly categoryList: Locator;
 
     constructor(page: Page) {
         super(page);
 
-        // 2. Initialize Locators in Constructor
-        // Priority 1: getByRole (User facing)
+        // Navigation
         this.signUpLink = page.getByRole('link', { name: 'Sign up' });
         this.loginLink = page.getByRole('link', { name: 'Log in' });
         this.monitorsLink = page.getByRole('link', { name: 'Monitors' });
+        this.laptopsLink = page.getByRole('link', { name: 'Laptops' });
+        this.phonesLink = page.getByRole('link', { name: 'Phones' });
 
-        // Modals (DemoBlaze uses IDs heavily, so we wrap them cleanly)
+        // Sign Up Modal
         this.signUpModal = page.locator('#signInModal');
-        this.loginModal = page.locator('#logInModal');
-
-        // Inputs
-        // Ideally we use getByLabel('Username'), but DemoBlaze lacks <label> tags.
-        // So we stick to ID, BUT we hide it here in the constructor.
         this.signUpUsernameInput = page.locator('#sign-username');
         this.signUpPasswordInput = page.locator('#sign-password');
-
-        // Buttons: Use getByRole to ensure it's actually a button
         this.signUpButton = page.getByRole('button', { name: 'Sign up' });
+        this.signUpCloseButton = this.signUpModal.getByRole('button', { name: 'Close' });
 
+        // Login Modal
+        this.loginModal = page.locator('#logInModal');
         this.loginUsernameInput = page.locator('#loginusername');
         this.loginPasswordInput = page.locator('#loginpassword');
         this.loginButton = page.getByRole('button', { name: 'Log in' });
+        this.loginCloseButton = this.loginModal.getByRole('button', { name: 'Close' });
 
+        // User State
         this.welcomeMessage = page.locator('#nameofuser');
+        this.logoutLink = page.getByRole('link', { name: 'Log out' });
+
+        // Product Catalog
+        this.productCards = page.locator('.card');
+        this.categoryList = page.locator('#cat');
     }
 
-    async navigate() {
-        await this.page.goto(process.env.BASE_URL!);
+    // Fluent API pattern - return 'this' for chaining
+    async navigate(): Promise<this> {
+        await super.navigate();
+        await this.waitForPageLoad();
+        return this;
     }
 
-    async signUp(username: string, pass: string) {
+    private async waitForPageLoad(): Promise<void> {
+        // Wait for at least one product card to ensure page is loaded
+        await this.productCards.first().waitFor({ state: 'visible' });
+    }
+
+    // Builder pattern - separate concerns
+    async signUp(username: string, password: string): Promise<void> {
+        await this.openSignUpModal();
+        await this.fillSignUpForm(username, password);
+        await this.submitSignUp();
+    }
+
+    private async openSignUpModal(): Promise<void> {
         await this.signUpLink.click();
+        await this.waitForVisible(this.signUpModal);
+    }
 
-        // Using the property, not a string selector
-        await this.signUpModal.waitFor({ state: 'visible' });
-
+    private async fillSignUpForm(username: string, password: string): Promise<void> {
         await this.signUpUsernameInput.fill(username);
-        await this.signUpPasswordInput.fill(pass);
-
-        this.page.once('dialog', async dialog => await dialog.accept());
-        await this.signUpButton.click();
-
-        await this.signUpModal.waitFor({ state: 'hidden' });
+        await this.signUpPasswordInput.fill(password);
     }
 
-    async login(username: string, pass: string) {
+    private async submitSignUp(): Promise<void> {
+        await this.handleDialog(async () => {
+            await this.signUpButton.click();
+        });
+        await this.waitForHidden(this.signUpModal);
+    }
+
+    async login(username: string, password: string): Promise<void> {
+        await this.openLoginModal();
+        await this.fillLoginForm(username, password);
+        await this.submitLogin();
+    }
+
+    private async openLoginModal(): Promise<void> {
         await this.loginLink.click();
-        await this.loginModal.waitFor({ state: 'visible' });
+        await this.waitForVisible(this.loginModal);
+    }
 
+    private async fillLoginForm(username: string, password: string): Promise<void> {
         await this.loginUsernameInput.fill(username);
-        await this.loginPasswordInput.fill(pass);
+        await this.loginPasswordInput.fill(password);
+    }
+
+    private async submitLogin(): Promise<void> {
         await this.loginButton.click();
+        await this.waitForHidden(this.loginModal);
     }
 
-    async verifyUserLoggedIn(username: string) {
-        // Combining locators for specific text check
-        await this.welcomeMessage.filter({ hasText: `Welcome ${username}` }).waitFor();
+    async logout(): Promise<void> {
+        await this.logoutLink.click();
     }
 
-    async goToMonitors() {
-        await this.monitorsLink.click();
+    async verifyUserLoggedIn(username: string): Promise<void> {
+        await this.welcomeMessage
+            .filter({ hasText: `Welcome ${username}` })
+            .waitFor({ state: 'visible' });
     }
 
-    async selectProduct(productName: string) {
-        // Dynamic locator based on text (Valid use case for inline creation or a helper method)
-        await this.page.getByRole('link', { name: productName }).click();
+    async isUserLoggedIn(): Promise<boolean> {
+        return await this.welcomeMessage.isVisible();
+    }
+
+    // Category navigation - Strategy Pattern potential
+    async goToCategory(category: 'Monitors' | 'Laptops' | 'Phones'): Promise<void> {
+        const categoryMap = {
+            'Monitors': this.monitorsLink,
+            'Laptops': this.laptopsLink,
+            'Phones': this.phonesLink
+        };
+        await categoryMap[category].click();
+        await this.waitForPageLoad();
+    }
+
+    async selectProduct(productName: string): Promise<void> {
+        await this.page.getByRole('link', { name: productName, exact: true }).click();
+    }
+
+    async getProductCardCount(): Promise<number> {
+        return await this.productCards.count();
+    }
+
+    // Public accessors for visual testing (avoid breaking encapsulation)
+    getNavbar(): Locator {
+        return this.page.locator('#navbarExample');
+    }
+
+    async showLoginModal(): Promise<Locator> {
+        await this.loginLink.click();
+        await this.waitForVisible(this.loginModal);
+        return this.loginModal;
+    }
+
+    getLoginModal(): Locator {
+        return this.loginModal;
+    }
+
+    async showSignUpModal(): Promise<Locator> {
+        await this.signUpLink.click();
+        await this.waitForVisible(this.signUpModal);
+        return this.signUpModal;
+    }
+
+    getSignUpModal(): Locator {
+        return this.signUpModal;
+    }
+
+    getFirstProductCard(): Locator {
+        return this.productCards.first();
+    }
+
+    // Visual Testing Methods
+    async verifyHomePageVisual(screenshotName: string): Promise<void> {
+        await this.verifyVisualBaseline(screenshotName);
+    }
+
+    async verifyCategoryListVisual(screenshotName: string): Promise<void> {
+        await this.verifyElementVisual(this.categoryList, screenshotName);
+    }
+
+    async verifyProductCardsVisual(screenshotName: string): Promise<void> {
+        await this.verifyElementVisual(this.productCards.first(), screenshotName);
     }
 }
