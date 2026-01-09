@@ -1,23 +1,18 @@
 import { test, expect } from '../../fixtures/pageFixtures';
 import { ScreenshotNames } from '../data/visualTestData';
-import { VisualTestHelper } from '../../helpers/visualTestHelpers';
 import { VisualTestConfig } from '../config/visualTestConfig';
 
 test.describe('Homepage Visual Tests', () => {
-    let visualHelper: VisualTestHelper;
-
-    test.beforeEach(async ({ page, homePage }) => {
-        visualHelper = new VisualTestHelper(page);
+    test.beforeEach(async ({ homePage, visualHelper }) => {
         await homePage.navigate();
-        await visualHelper.waitForStability(1500);
+        await visualHelper.waitForStability();
     });
 
-    test('should match full homepage baseline', async ({ page, homePage }) => {
+    test('should match full homepage baseline', async ({ page, homePage, visualHelper }) => {
         await homePage.getFirstProductCard().waitFor({ state: 'visible' });
         await visualHelper.waitForImages();
 
         await expect(page).toHaveScreenshot(ScreenshotNames.homepage.full, {
-            ...VisualTestConfig.screenshots,
             mask: visualHelper.getMaskLocators(),
         });
     });
@@ -33,20 +28,16 @@ test.describe('Homepage Visual Tests', () => {
         await homePage.verifyCategoryListVisual(ScreenshotNames.homepage.categories);
     });
 
-    test('should match product card visual baseline', async ({ homePage }) => {
+    test('should match product card visual baseline', async ({ homePage, visualHelper }) => {
         const firstCard = homePage.getFirstProductCard();
 
-        // Wait for card to be visible and stable
         await firstCard.waitFor({ state: 'visible' });
         await visualHelper.waitForElementStability(firstCard);
-
-        // Wait for image inside card to load
         await firstCard.locator('img').waitFor({ state: 'visible' });
         await visualHelper.waitForImages(firstCard);
 
         await expect(firstCard).toHaveScreenshot(ScreenshotNames.homepage.productCard, {
-            ...VisualTestConfig.screenshots,
-            maxDiffPixels: 200, // Card content can vary
+            maxDiffPixels: 200,
         });
     });
 
@@ -70,15 +61,14 @@ test.describe('Homepage Visual Tests', () => {
         ] as const;
 
         for (const category of categories) {
-            test(`should match ${category.name.toLowerCase()} category view`, async ({ page, homePage }) => {
+            test(`should match ${category.name.toLowerCase()} category view`, async ({ page, homePage, visualHelper }) => {
                 await homePage.goToCategory(category.name);
                 await homePage.getFirstProductCard().waitFor({ state: 'visible' });
-                await visualHelper.waitForStability(1000);
+                await visualHelper.waitForStability();
 
                 await expect(page).toHaveScreenshot(
                     ScreenshotNames.categories[category.screenshotKey],
                     {
-                        ...VisualTestConfig.screenshots,
                         mask: visualHelper.getMaskLocators(),
                     }
                 );

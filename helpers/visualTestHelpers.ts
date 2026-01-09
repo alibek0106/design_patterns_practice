@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 import { VisualTestConfig } from '../tests/config/visualTestConfig';
 
 export class VisualTestHelper {
@@ -6,35 +6,35 @@ export class VisualTestHelper {
 
     /**
      * Wait for page to be stable before taking screenshot
-     * Using 'load' instead of 'networkidle' as DemoBlaze has continuous network activity
+     * Using visibility checks instead of fixed timeouts for reliability
      */
-    async waitForStability(timeout = 1000): Promise<void> {
-        await this.page.waitForLoadState('load');
+    async waitForStability(): Promise<void> {
         await this.page.waitForLoadState('domcontentloaded');
-        // Wait for any animations or transitions to complete
-        await this.page.waitForTimeout(timeout);
+        await this.page.waitForLoadState('load');
     }
 
     /**
      * Wait for specific element to be stable (no size/position changes)
      */
-    async waitForElementStability(locator: Locator, timeout = 3000): Promise<void> {
+    async waitForElementStability(locator: Locator, maxAttempts = 10): Promise<void> {
         await locator.waitFor({ state: 'visible' });
 
-        // Wait for element to stop changing size
         let previousBox = await locator.boundingBox();
-        const startTime = Date.now();
+        let stableCount = 0;
 
-        while (Date.now() - startTime < timeout) {
+        for (let i = 0; i < maxAttempts; i++) {
             await this.page.waitForTimeout(100);
             const currentBox = await locator.boundingBox();
 
             if (previousBox && currentBox &&
                 previousBox.height === currentBox.height &&
                 previousBox.width === currentBox.width) {
-                // Element is stable
-                await this.page.waitForTimeout(300); // Extra buffer
-                return;
+                stableCount++;
+                if (stableCount >= 2) {
+                    return; // Element is stable
+                }
+            } else {
+                stableCount = 0;
             }
             previousBox = currentBox;
         }
@@ -56,7 +56,7 @@ export class VisualTestHelper {
     /**
      * Set viewport for responsive testing
      */
-    async setViewport(device: 'desktop' | 'laptop'): Promise<void> {
+    async setViewport(device: keyof typeof VisualTestConfig.viewports): Promise<void> {
         const viewport = VisualTestConfig.viewports[device];
         await this.page.setViewportSize(viewport);
     }
@@ -65,7 +65,7 @@ export class VisualTestHelper {
      * Mask carousel and other dynamic elements
      */
     getMaskLocators(): Locator[] {
-        return VisualTestConfig.maskSelectors.carousel.map(selector =>
+        return VisualTestConfig.maskSelectors.map(selector =>
             this.page.locator(selector)
         );
     }
@@ -73,10 +73,8 @@ export class VisualTestHelper {
     /**
      * Take screenshot with standard options
      */
-    async takeScreenshot(name: string, options: any = {}): Promise<void> {
-        const { expect } = await import('@playwright/test');
+    async takeScreenshot(name: string, options: object = {}): Promise<void> {
         await expect(this.page).toHaveScreenshot(name, {
-            ...VisualTestConfig.screenshots,
             ...options,
         });
     }
@@ -84,10 +82,8 @@ export class VisualTestHelper {
     /**
      * Take element screenshot with standard options
      */
-    async takeElementScreenshot(locator: Locator, name: string, options: any = {}): Promise<void> {
-        const { expect } = await import('@playwright/test');
+    async takeElementScreenshot(locator: Locator, name: string, options: object = {}): Promise<void> {
         await expect(locator).toHaveScreenshot(name, {
-            ...VisualTestConfig.screenshots,
             ...options,
         });
     }
@@ -97,15 +93,15 @@ export class VisualTestHelper {
      */
     async scrollIntoView(locator: Locator): Promise<void> {
         await locator.scrollIntoViewIfNeeded();
-        await this.page.waitForTimeout(500); // Wait for scroll animation
     }
 
     /**
-     * Wait for images to load in a specific container
+     * Wait for images to load in a specific container with timeout
      */
-    async waitForImages(containerLocator?: Locator): Promise<void> {
+    async waitForImages(containerLocator?: Locator, timeoutMs = 10000): Promise<void> {
         const container = containerLocator || this.page.locator('body');
-        await container.locator('img').evaluateAll(images => {
+
+        const imageLoadPromise = container.locator('img').evaluateAll(images => {
             return Promise.all(
                 images.map(img => {
                     if ((img as HTMLImageElement).complete) return Promise.resolve();
@@ -115,6 +111,15 @@ export class VisualTestHelper {
                     });
                 })
             );
+        });
+
+        await Promise.race([
+            imageLoadPromise,
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Image load timeout')), timeoutMs)
+            )
+        ]).catch(() => {
+            // Continue even if images timeout - test will fail on screenshot diff
         });
     }
 }

@@ -70,4 +70,13 @@ export class ProductPage extends BasePage {
     async verifyProductImageVisual(screenshotName: string): Promise<void> {
         await this.verifyElementVisual(this.productImage, screenshotName);
     }
+
+    // Public accessors for visual testing
+    getProductContent(): Locator {
+        return this.page.locator('.product-content');
+    }
+
+    getAddToCartButton(): Locator {
+        return this.addToCartButton;
+    }
 }
