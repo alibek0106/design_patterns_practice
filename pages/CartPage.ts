@@ -124,4 +124,23 @@ export class CartPage extends BasePage {
     async verifyCartTableVisual(screenshotName: string): Promise<void> {
         await this.verifyElementVisual(this.cartTable, screenshotName);
     }
+
+    // Public accessors for visual testing
+    getCartTable(): Locator {
+        return this.cartTable;
+    }
+
+    getTotalPriceSection(): Locator {
+        return this.totalPrice;
+    }
+
+    async showOrderModal(): Promise<Locator> {
+        await this.placeOrderButton.click();
+        await this.waitForVisible(this.orderModal);
+        return this.orderModal;
+    }
+
+    getOrderModal(): Locator {
+        return this.orderModal;
+    }
 }

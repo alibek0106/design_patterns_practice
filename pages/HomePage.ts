@@ -149,8 +149,36 @@ export class HomePage extends BasePage {
         await this.waitForPageLoad();
     }
 
-    async selectProduct(productName: string): Promise<void> {
-        await this.page.getByRole('link', { name: productName, exact: true }).click();
+    async selectProduct(productName: string, category?: 'Monitors' | 'Laptops' | 'Phones'): Promise<void> {
+        // Product to category mapping for auto-detection
+        const productCategoryMap: Record<string, 'Monitors' | 'Laptops' | 'Phones'> = {
+            // Monitors
+            'Apple monitor 24': 'Monitors',
+            'ASUS Full HD': 'Monitors',
+            // Laptops
+            'Sony vaio i5': 'Laptops',
+            'Sony vaio i7': 'Laptops',
+            'MacBook air': 'Laptops',
+            'Dell i7 8gb': 'Laptops',
+            '2017 Dell 15.6 Inch': 'Laptops',
+            'MacBook Pro': 'Laptops',
+            // Phones
+            'Samsung galaxy s6': 'Phones',
+            'Nokia lumia 1520': 'Phones',
+            'Nexus 6': 'Phones',
+            'Samsung galaxy s7': 'Phones',
+            'Iphone 6 32gb': 'Phones',
+            'Sony xperia z5': 'Phones',
+            'HTC One M9': 'Phones',
+        };
+
+        const targetCategory = category || productCategoryMap[productName];
+
+        if (targetCategory) {
+            await this.goToCategory(targetCategory);
+        }
+
+        await this.page.getByRole('link', { name: productName }).click();
     }
 
     async getProductCardCount(): Promise<number> {

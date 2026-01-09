@@ -1,6 +1,5 @@
 import { test, expect } from '../../fixtures/pageFixtures';
 import { ScreenshotNames } from '../data/visualTestData';
-import { VisualTestConfig } from '../config/visualTestConfig';
 
 test.describe('Homepage Visual Tests', () => {
     test.beforeEach(async ({ homePage, visualHelper }) => {

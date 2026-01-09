@@ -79,4 +79,8 @@ export class ProductPage extends BasePage {
     getAddToCartButton(): Locator {
         return this.addToCartButton;
     }
+
+    getProductImage(): Locator {
+        return this.productImage;
+    }
 }

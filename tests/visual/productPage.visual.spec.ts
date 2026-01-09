@@ -14,7 +14,6 @@ test.describe('Product Page Visual Tests', () => {
     });
 
     test('should match product details section', async ({ homePage, productPage, visualHelper }) => {
-        await homePage.goToCategory('Laptops');
         await homePage.selectProduct(TestProducts.laptops.sonyVaio);
         await visualHelper.waitForStability();
 
@@ -23,7 +22,6 @@ test.describe('Product Page Visual Tests', () => {
     });
 
     test('should match product image', async ({ homePage, productPage, visualHelper }) => {
-        await homePage.goToCategory('Monitors');
         await homePage.selectProduct(TestProducts.monitors.appleMonitor);
         await visualHelper.waitForStability();
 
@@ -31,7 +29,6 @@ test.describe('Product Page Visual Tests', () => {
     });
 
     test('should match add to cart button state', async ({ homePage, productPage, visualHelper }) => {
-        await homePage.goToCategory('Phones');
         await homePage.selectProduct(TestProducts.phones.iphone6);
         await visualHelper.waitForStability();
 
@@ -41,17 +38,28 @@ test.describe('Product Page Visual Tests', () => {
 
     test.describe('Different Product Types', () => {
         const productTypes = [
-            { category: 'Monitors' as const, product: TestProducts.monitors.asusMonitor, screenshotKey: 'monitorLayout' as const },
-            { category: 'Laptops' as const, product: TestProducts.laptops.dell2017, screenshotKey: 'laptopLayout' as const },
-            { category: 'Phones' as const, product: TestProducts.phones.nexus6, screenshotKey: 'phoneLayout' as const },
+            { product: TestProducts.monitors.asusMonitor, screenshotKey: 'monitorLayout' as const },
+            { product: TestProducts.laptops.dell2017, screenshotKey: 'laptopLayout' as const },
+            { product: TestProducts.phones.nexus6, screenshotKey: 'phoneLayout' as const },
         ];
 
-        for (const { category, product, screenshotKey } of productTypes) {
-            test(`should match ${category.toLowerCase()} product layout`, async ({ homePage, visualHelper }) => {
-                await homePage.goToCategory(category);
+        for (const { product, screenshotKey } of productTypes) {
+            test(`should match ${screenshotKey.replace('Layout', '').toLowerCase()} product layout`, async ({ page, homePage, productPage, visualHelper }) => {
+                await homePage.navigate(); // Reset state
                 await homePage.selectProduct(product);
-                await visualHelper.waitForStability();
 
+                // Wait for product image specifically
+                const productImage = productPage.getProductImage();
+                await productImage.waitFor({ state: 'visible', timeout: 10000 });
+
+                // Validate image is actually loaded (non-zero width)
+                await page.waitForFunction(
+                    (el) => (el as HTMLImageElement).naturalWidth > 0,
+                    await productImage.elementHandle(),
+                    { timeout: 5000 }
+                );
+
+                await visualHelper.waitForStability();
                 await visualHelper.takeScreenshot(ScreenshotNames.productPage[screenshotKey]);
             });
         }

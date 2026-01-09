@@ -11,6 +11,7 @@ export const ScreenshotNames = {
     modals: {
         login: 'modal-login.png',
         signUp: 'modal-signup.png',
+        placeOrder: 'modal-place-order.png',
     },
 
     // Product page screenshots
@@ -22,6 +23,15 @@ export const ScreenshotNames = {
         monitorLayout: 'product-monitor-layout.png',
         laptopLayout: 'product-laptop-layout.png',
         phoneLayout: 'product-phone-layout.png',
+    },
+
+    // Cart page screenshots
+    cartPage: {
+        empty: 'cart-empty.png',
+        singleItem: 'cart-single-item.png',
+        multipleItems: 'cart-multiple-items.png',
+        table: 'cart-table.png',
+        totalPrice: 'cart-total-price.png',
     },
 
     // Category views
