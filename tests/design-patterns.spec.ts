@@ -32,7 +32,7 @@ class PurchaseMonitorFlow extends AbstractTestFlow {
     }
 
     protected async performActions(): Promise<void> {
-        await this.homePage.goToMonitors();
+        await this.homePage.goToCategory('Monitors');
         await this.homePage.selectProduct(this.targetProduct);
         await this.page.waitForURL(/.*prod.html.*/);
     }

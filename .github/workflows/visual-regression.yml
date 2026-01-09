@@ -1,0 +1,40 @@
+name: Visual Regression Tests
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  visual-tests:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run Visual Tests
+        run: npx playwright test tests/visual/
+        env:
+          BASE_URL: ${{ secrets.BASE_URL || 'https://www.demoblaze.com' }}
+        continue-on-error: true
+      
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-test-artifacts
+          path: |
+            playwright-report/
+            test-results/
+            tests/visual/**/*.png
+          retention-days: 30
