@@ -38,8 +38,7 @@ jobs:
         # --workers=1: Ensures stability for visual snapshots
         # --reporter=blob: Create raw data instead of HTML
         run: |
-          npx playwright test \
-          --grep @visual \
+          npx playwright tests/visual/ \
           --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} \
           --workers=1 \
           --reporter=blob
