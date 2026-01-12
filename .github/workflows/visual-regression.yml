@@ -1,19 +1,31 @@
-name: Visual Regression Tests
+name: Visual Regression Tests (Sharded)
 
 on:
+  push:
+    branches: [ visual_testing/Alibek ]
   pull_request:
-    branches: [design_patterns_task]
+    branches: [ visual_testing/Alibek ]
   workflow_dispatch:
 
 jobs:
+  # JOB 1: Run the tests (split across 2 agents)
   visual-tests:
-    timeout-minutes: 30
+    timeout-minutes: 60
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.0-jammy
+
+    strategy:
+      fail-fast: false #In case shard 1 fails, shard 2 continues working
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]  
     
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
@@ -21,21 +33,55 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-      
-      - name: Run Visual Tests
-        run: npx playwright test tests/visual/
-        env:
-          BASE_URL: ${{ secrets.BASE_URL || 'https://www.demoblaze.com' }}
-        continue-on-error: true
-      
-      - uses: actions/upload-artifact@v4
+      - name: Run Playwright Tests (Sharded)
+        # --shard=x/y: Splits the tests
+        # --workers=1: Ensures stability for visual snapshots
+        # --reporter=blob: Create raw data instead of HTML
+        run: |
+          npx playwright test \
+          --grep @visual \
+          --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} \
+          --workers=1 \
+          --reporter=blob
+
+      - name: Upload Blob Report
+        # Uploads the raw data from THIS specific agent
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: visual-test-artifacts
-          path: |
-            playwright-report/
-            test-results/
-            tests/visual/**/*.png
+          name: blob-report-${{ matrix.shardIndex }}
+          path: blob-report
+          retention-days: 1
+
+  # JOB 2: Merge the reports
+  merge-reports:
+    if: always() # Run even if tests failed
+    needs: [visual-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download All blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+          merge-multiple: true
+
+      - name: Merge reports into HTML
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload Final HTML report
+        uses: actions/upload-artifact@v4
+        with: 
+          name: visual-diff-report
+          path: playwright-report
           retention-days: 30
