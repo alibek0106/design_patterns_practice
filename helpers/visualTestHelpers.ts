@@ -14,6 +14,25 @@ export class VisualTestHelper {
     }
 
     /**
+     * Wait for a specific network response with status check
+     */
+    async waitForNetworkResponse(urlPattern: string | RegExp, statusCode: number = 200): Promise<void> {
+        await this.page.waitForResponse(response =>
+            (typeof urlPattern === 'string' ? response.url().includes(urlPattern) : urlPattern.test(response.url())) &&
+            response.status() === statusCode
+        );
+    }
+
+    /**
+     * Wait for no pending network requests (simple idle check)
+     */
+    async waitForNetworkIdle(timeout: number = 2000): Promise<void> {
+        await this.page.waitForLoadState('networkidle', { timeout }).catch(() => {
+            // Ignore timeout, just means network wasn't fully idle but we proceeded
+        });
+    }
+
+    /**
      * Wait for specific element to be stable (no size/position changes)
      */
     async waitForElementStability(locator: Locator, maxAttempts = 10): Promise<void> {
