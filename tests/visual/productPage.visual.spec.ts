@@ -11,7 +11,7 @@ test.describe('Product Page Visual Tests', () => {
         const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.phones.samsungGalaxyS6);
         await viewProductPromise;
-        await visualHelper.waitForStability();
+        await visualHelper.ensurePageLoaded();
 
         await expect(page).toHaveScreenshot(ScreenshotNames.productPage.full);
     });
@@ -20,7 +20,7 @@ test.describe('Product Page Visual Tests', () => {
         const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.laptops.sonyVaio);
         await viewProductPromise;
-        await visualHelper.waitForStability();
+        await visualHelper.ensurePageLoaded();
 
         const detailsSection = productPage.getProductContent();
         await expect(detailsSection).toHaveScreenshot(ScreenshotNames.productPage.details);
@@ -30,7 +30,7 @@ test.describe('Product Page Visual Tests', () => {
         const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.monitors.appleMonitor);
         await viewProductPromise;
-        await visualHelper.waitForStability();
+        await visualHelper.ensurePageLoaded();
 
         await productPage.verifyProductImageVisual(ScreenshotNames.productPage.image);
     });
@@ -39,7 +39,7 @@ test.describe('Product Page Visual Tests', () => {
         const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.phones.iphone6);
         await viewProductPromise;
-        await visualHelper.waitForStability();
+        await visualHelper.ensurePageLoaded();
 
         const addToCartBtn = productPage.getAddToCartButton();
         await expect(addToCartBtn).toHaveScreenshot(ScreenshotNames.productPage.addToCartButton);
@@ -70,7 +70,7 @@ test.describe('Product Page Visual Tests', () => {
                     { timeout: 5000 }
                 );
 
-                await visualHelper.waitForStability();
+                await visualHelper.ensurePageLoaded();
                 await visualHelper.takeScreenshot(ScreenshotNames.productPage[screenshotKey]);
             });
         }

@@ -5,11 +5,10 @@ export class VisualTestHelper {
     constructor(private page: Page) { }
 
     /**
-     * Wait for page to be stable before taking screenshot
-     * Using visibility checks instead of fixed timeouts for reliability
+     * Wait for page to be fully loaded
+     * Effectively waits for the 'load' event
      */
-    async waitForStability(): Promise<void> {
-        await this.page.waitForLoadState('domcontentloaded');
+    async ensurePageLoaded(): Promise<void> {
         await this.page.waitForLoadState('load');
     }
 

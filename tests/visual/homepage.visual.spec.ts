@@ -1,10 +1,11 @@
 import { test, expect } from '../../fixtures/pageFixtures';
 import { ScreenshotNames } from '../data/visualTestData';
+import { ApiEndpoints } from '../data/ApiEndpoints';
 
 test.describe('Homepage Visual Tests', () => {
     test.beforeEach(async ({ homePage, visualHelper }) => {
         await homePage.navigate();
-        await visualHelper.waitForStability();
+        await visualHelper.ensurePageLoaded();
     });
 
     test('should match full homepage baseline', async ({ page, homePage, visualHelper }) => {
@@ -41,12 +42,14 @@ test.describe('Homepage Visual Tests', () => {
     });
 
     test.describe('Modal Visual Tests', () => {
-        test('should match login modal appearance', async ({ homePage }) => {
+        test('should match login modal appearance', async ({ homePage, visualHelper }) => {
+            await visualHelper.hideDynamicElements(['.card', '.carousel-inner']);
             const modal = await homePage.showLoginModal();
             await expect(modal).toHaveScreenshot(ScreenshotNames.modals.login);
         });
 
-        test('should match signup modal appearance', async ({ homePage }) => {
+        test('should match signup modal appearance', async ({ homePage, visualHelper }) => {
+            await visualHelper.hideDynamicElements(['.card', '.carousel-inner']);
             const modal = await homePage.showSignUpModal();
             await expect(modal).toHaveScreenshot(ScreenshotNames.modals.signUp);
         });
@@ -61,9 +64,13 @@ test.describe('Homepage Visual Tests', () => {
 
         for (const category of categories) {
             test(`should match ${category.name.toLowerCase()} category view`, async ({ page, homePage, visualHelper }) => {
+                const categoryPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.category.byCategory);
                 await homePage.goToCategory(category.name);
+                await categoryPromise;
+
                 await homePage.getFirstProductCard().waitFor({ state: 'visible' });
-                await visualHelper.waitForStability();
+                await visualHelper.waitForImages();
+                await visualHelper.ensurePageLoaded();
 
                 await expect(page).toHaveScreenshot(
                     ScreenshotNames.categories[category.screenshotKey],

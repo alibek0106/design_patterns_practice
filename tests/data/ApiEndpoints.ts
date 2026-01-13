@@ -11,5 +11,8 @@ export const ApiEndpoints = {
     cart: {
         viewCart: '/viewcart',
         deleteItem: '/deleteitem'
+    },
+    category: {
+        byCategory: '/bycat'
     }
 } as const;
