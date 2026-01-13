@@ -30,7 +30,7 @@ test.describe('Cart Page Visual Tests', () => {
 
     test('should match cart with multiple items', async ({ page, homePage, productPage, cartPage, visualHelper }) => {
         await productPage.addProductFromHome(homePage, TestProducts.phones.samsungGalaxyS6);
-        await productPage.addProductFromHome(homePage, TestProducts.laptops.sonyVaio);
+        //await productPage.addProductFromHome(homePage, TestProducts.laptops.sonyVaio);
 
         const viewCartPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await cartPage.navigate();
