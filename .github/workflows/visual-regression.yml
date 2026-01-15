@@ -45,7 +45,6 @@ jobs:
           --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} \
           --workers=1 \
           --retries=2 \
-          --reporter=blob
 
       - name: Upload Blob Report
         # Uploads the raw data from THIS specific agent
