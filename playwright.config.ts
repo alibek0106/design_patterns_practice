@@ -28,7 +28,7 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
     ? [
-      ['dot'],
+      ['list'],
       ['html'],
       ['junit', { outputFile: 'test-results/results.xml' }],
       ['json', { outputFile: 'test-results/results.json' }],

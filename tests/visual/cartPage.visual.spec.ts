@@ -20,9 +20,8 @@ test.describe('Cart Page Visual Tests', () => {
     test('should match cart with single item', async ({ page, homePage, productPage, cartPage, visualHelper }) => {
         await productPage.addProductFromHome(homePage, TestProducts.phones.samsungGalaxyS6);
 
-        const viewCartPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await cartPage.navigate();
-        await viewCartPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
         await expect(page).toHaveScreenshot(ScreenshotNames.cartPage.singleItem);
@@ -32,9 +31,8 @@ test.describe('Cart Page Visual Tests', () => {
         await productPage.addProductFromHome(homePage, TestProducts.phones.samsungGalaxyS6);
         await productPage.addProductFromHome(homePage, TestProducts.laptops.sonyVaio);
 
-        const viewCartPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await cartPage.navigate();
-        await viewCartPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
         await expect(page).toHaveScreenshot(ScreenshotNames.cartPage.multipleItems);
