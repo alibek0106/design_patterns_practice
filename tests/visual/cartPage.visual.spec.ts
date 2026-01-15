@@ -1,9 +1,6 @@
 import { test, expect } from '../../fixtures/pageFixtures';
 import { ScreenshotNames, TestProducts } from '../data/visualTestData';
 import { ApiEndpoints } from '../data/ApiEndpoints';
-import { HomePage } from '../../pages/HomePage';
-import { ProductPage } from '../../pages/ProductPage';
-import { VisualTestHelper } from '../../helpers/visualTestHelpers';
 
 
 
@@ -24,7 +21,7 @@ test.describe('Cart Page Visual Tests', () => {
         await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
-        await expect(page).toHaveScreenshot(ScreenshotNames.cartPage.singleItem);
+        await expect(page, 'Cart should have single item').toHaveScreenshot(ScreenshotNames.cartPage.singleItem);
     });
 
     test('should match cart with multiple items', async ({ page, homePage, productPage, cartPage, visualHelper }) => {
@@ -35,42 +32,39 @@ test.describe('Cart Page Visual Tests', () => {
         await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
-        await expect(page).toHaveScreenshot(ScreenshotNames.cartPage.multipleItems);
+        await expect(page, 'Cart should have multiple items').toHaveScreenshot(ScreenshotNames.cartPage.multipleItems);
     });
 
     test('should match cart table visual baseline', async ({ homePage, productPage, cartPage, visualHelper }) => {
         await productPage.addProductFromHome(homePage, TestProducts.phones.samsungGalaxyS7);
 
-        const viewCartPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await cartPage.navigate();
-        await viewCartPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
         const cartTable = cartPage.getCartTable();
-        await expect(cartTable).toHaveScreenshot(ScreenshotNames.cartPage.table);
+        await expect(cartTable, 'Cart table should match baseline').toHaveScreenshot(ScreenshotNames.cartPage.table);
     });
 
     test('should match place order modal', async ({ homePage, productPage, cartPage, visualHelper }) => {
         await productPage.addProductFromHome(homePage, TestProducts.monitors.appleMonitor);
 
-        const viewCartPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await cartPage.navigate();
-        await viewCartPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
         const modal = await cartPage.showOrderModal();
-        await expect(modal).toHaveScreenshot(ScreenshotNames.modals.placeOrder);
+        await expect(modal, 'Place order modal should match baseline').toHaveScreenshot(ScreenshotNames.modals.placeOrder);
     });
 
     test('should match cart total price section', async ({ homePage, productPage, cartPage, visualHelper }) => {
         await productPage.addProductFromHome(homePage, TestProducts.laptops.macBookAir);
 
-        const viewCartPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await cartPage.navigate();
-        await viewCartPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.cart.viewCart);
         await visualHelper.ensurePageLoaded();
 
         const totalSection = cartPage.getTotalPriceSection();
-        await expect(totalSection).toHaveScreenshot(ScreenshotNames.cartPage.totalPrice);
+        await expect(totalSection, 'Total price section should match baseline').toHaveScreenshot(ScreenshotNames.cartPage.totalPrice);
     });
 });

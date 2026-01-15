@@ -12,7 +12,7 @@ test.describe('Homepage Visual Tests', () => {
         await homePage.getFirstProductCard().waitFor({ state: 'visible' });
         await visualHelper.waitForImages();
 
-        await expect(page).toHaveScreenshot(ScreenshotNames.homepage.full, {
+        await expect(page, 'Full homepage should match baseline').toHaveScreenshot(ScreenshotNames.homepage.full, {
             mask: visualHelper.getMaskLocators(),
         });
     });
@@ -36,7 +36,7 @@ test.describe('Homepage Visual Tests', () => {
         await firstCard.locator('img').waitFor({ state: 'visible' });
         await visualHelper.waitForImages(firstCard);
 
-        await expect(firstCard).toHaveScreenshot(ScreenshotNames.homepage.productCard, {
+        await expect(firstCard, 'Product card should match baseline').toHaveScreenshot(ScreenshotNames.homepage.productCard, {
             maxDiffPixels: 200,
         });
     });
@@ -45,13 +45,13 @@ test.describe('Homepage Visual Tests', () => {
         test('should match login modal appearance', async ({ homePage, visualHelper }) => {
             await visualHelper.hideDynamicElements(['.card', '.carousel-inner']);
             const modal = await homePage.showLoginModal();
-            await expect(modal).toHaveScreenshot(ScreenshotNames.modals.login);
+            await expect(modal, 'Login modal should match baseline').toHaveScreenshot(ScreenshotNames.modals.login);
         });
 
         test('should match signup modal appearance', async ({ homePage, visualHelper }) => {
             await visualHelper.hideDynamicElements(['.card', '.carousel-inner']);
             const modal = await homePage.showSignUpModal();
-            await expect(modal).toHaveScreenshot(ScreenshotNames.modals.signUp);
+            await expect(modal, 'Signup modal should match baseline').toHaveScreenshot(ScreenshotNames.modals.signUp);
         });
     });
 
@@ -72,7 +72,7 @@ test.describe('Homepage Visual Tests', () => {
                 await visualHelper.waitForImages();
                 await visualHelper.ensurePageLoaded();
 
-                await expect(page).toHaveScreenshot(
+                await expect(page, 'Category view should match baseline').toHaveScreenshot(
                     ScreenshotNames.categories[category.screenshotKey],
                     {
                         mask: visualHelper.getMaskLocators(),

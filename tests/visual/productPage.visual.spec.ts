@@ -8,41 +8,37 @@ test.describe('Product Page Visual Tests', () => {
     });
 
     test('should match product page full baseline - Samsung Galaxy S6', async ({ page, homePage, visualHelper }) => {
-        const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.phones.samsungGalaxyS6);
-        await viewProductPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await visualHelper.ensurePageLoaded();
 
-        await expect(page).toHaveScreenshot(ScreenshotNames.productPage.full);
+        await expect(page, 'Product page should match baseline').toHaveScreenshot(ScreenshotNames.productPage.full);
     });
 
     test('should match product details section', async ({ homePage, productPage, visualHelper }) => {
-        const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.laptops.sonyVaio);
-        await viewProductPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.product.view)
         await visualHelper.ensurePageLoaded();
 
         const detailsSection = productPage.getProductContent();
-        await expect(detailsSection).toHaveScreenshot(ScreenshotNames.productPage.details);
+        await expect(detailsSection, 'Product details section should match baseline').toHaveScreenshot(ScreenshotNames.productPage.details);
     });
 
     test('should match product image', async ({ homePage, productPage, visualHelper }) => {
-        const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.monitors.appleMonitor);
-        await viewProductPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.product.view)
         await visualHelper.ensurePageLoaded();
 
         await productPage.verifyProductImageVisual(ScreenshotNames.productPage.image);
     });
 
     test('should match add to cart button state', async ({ homePage, productPage, visualHelper }) => {
-        const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await homePage.selectProduct(TestProducts.phones.iphone6);
-        await viewProductPromise;
+        await visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
         await visualHelper.ensurePageLoaded();
 
         const addToCartBtn = productPage.getAddToCartButton();
-        await expect(addToCartBtn).toHaveScreenshot(ScreenshotNames.productPage.addToCartButton);
+        await expect(addToCartBtn, 'Add to cart button should match baseline').toHaveScreenshot(ScreenshotNames.productPage.addToCartButton);
     });
 
     test.describe('Different Product Types', () => {
@@ -55,9 +51,8 @@ test.describe('Product Page Visual Tests', () => {
         for (const { product, screenshotKey } of productTypes) {
             test(`should match ${screenshotKey.replace('Layout', '').toLowerCase()} product layout`, async ({ page, homePage, productPage, visualHelper }) => {
                 await homePage.navigate(); // Reset state
-                const viewProductPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
                 await homePage.selectProduct(product);
-                await viewProductPromise;
+                await visualHelper.waitForNetworkResponse(ApiEndpoints.product.view);
 
                 // Wait for product image specifically
                 const productImage = productPage.getProductImage();
