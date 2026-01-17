@@ -1,17 +1,18 @@
 import { test, expect } from '../../fixtures/pageFixtures';
 import { ScreenshotNames } from '../data/visualTestData';
+import { ApiEndpoints } from '../data/ApiEndpoints';
 
 test.describe('Homepage Visual Tests', () => {
     test.beforeEach(async ({ homePage, visualHelper }) => {
         await homePage.navigate();
-        await visualHelper.waitForStability();
+        await visualHelper.ensurePageLoaded();
     });
 
     test('should match full homepage baseline', async ({ page, homePage, visualHelper }) => {
         await homePage.getFirstProductCard().waitFor({ state: 'visible' });
         await visualHelper.waitForImages();
 
-        await expect(page).toHaveScreenshot(ScreenshotNames.homepage.full, {
+        await expect(page, 'Full homepage should match baseline').toHaveScreenshot(ScreenshotNames.homepage.full, {
             mask: visualHelper.getMaskLocators(),
         });
     });
@@ -35,20 +36,22 @@ test.describe('Homepage Visual Tests', () => {
         await firstCard.locator('img').waitFor({ state: 'visible' });
         await visualHelper.waitForImages(firstCard);
 
-        await expect(firstCard).toHaveScreenshot(ScreenshotNames.homepage.productCard, {
+        await expect(firstCard, 'Product card should match baseline').toHaveScreenshot(ScreenshotNames.homepage.productCard, {
             maxDiffPixels: 200,
         });
     });
 
     test.describe('Modal Visual Tests', () => {
-        test('should match login modal appearance', async ({ homePage }) => {
+        test('should match login modal appearance', async ({ homePage, visualHelper }) => {
+            await visualHelper.hideDynamicElements(['.card', '.carousel-inner']);
             const modal = await homePage.showLoginModal();
-            await expect(modal).toHaveScreenshot(ScreenshotNames.modals.login);
+            await expect(modal, 'Login modal should match baseline').toHaveScreenshot(ScreenshotNames.modals.login);
         });
 
-        test('should match signup modal appearance', async ({ homePage }) => {
+        test('should match signup modal appearance', async ({ homePage, visualHelper }) => {
+            await visualHelper.hideDynamicElements(['.card', '.carousel-inner']);
             const modal = await homePage.showSignUpModal();
-            await expect(modal).toHaveScreenshot(ScreenshotNames.modals.signUp);
+            await expect(modal, 'Signup modal should match baseline').toHaveScreenshot(ScreenshotNames.modals.signUp);
         });
     });
 
@@ -61,11 +64,15 @@ test.describe('Homepage Visual Tests', () => {
 
         for (const category of categories) {
             test(`should match ${category.name.toLowerCase()} category view`, async ({ page, homePage, visualHelper }) => {
+                const categoryPromise = visualHelper.waitForNetworkResponse(ApiEndpoints.category.byCategory);
                 await homePage.goToCategory(category.name);
-                await homePage.getFirstProductCard().waitFor({ state: 'visible' });
-                await visualHelper.waitForStability();
+                await categoryPromise;
 
-                await expect(page).toHaveScreenshot(
+                await homePage.getFirstProductCard().waitFor({ state: 'visible' });
+                await visualHelper.waitForImages();
+                await visualHelper.ensurePageLoaded();
+
+                await expect(page, 'Category view should match baseline').toHaveScreenshot(
                     ScreenshotNames.categories[category.screenshotKey],
                     {
                         mask: visualHelper.getMaskLocators(),

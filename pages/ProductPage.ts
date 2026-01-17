@@ -1,5 +1,6 @@
 import { BasePage } from './BasePage';
 import { CommandInvoker, ClickCommand } from '../patterns/command/Command';
+import { HomePage } from './HomePage';
 import { Locator, Page } from '@playwright/test';
 
 export class ProductPage extends BasePage {
@@ -48,10 +49,38 @@ export class ProductPage extends BasePage {
 
     // Return type makes it chainable
     async addToCart(): Promise<void> {
-        await this.handleDialog(async () => {
-            const clickCmd = new ClickCommand(this.addToCartButton);
-            await this.invoker.executeCommand(clickCmd);
+        const addToCartResponse = this.page.waitForResponse(response =>
+            response.url().includes('/addtocart') && response.status() === 200
+        );
+
+        // Explicitly wait for the dialog event to ensure serialization
+        const dialogPromise = new Promise<void>(resolve => {
+            this.page.once('dialog', async dialog => {
+                await dialog.accept();
+                resolve();
+            });
         });
+
+        const clickCmd = new ClickCommand(this.addToCartButton);
+        await this.invoker.executeCommand(clickCmd);
+
+        await Promise.all([addToCartResponse, dialogPromise]);
+    }
+
+    /**
+     * Complete flow to add a product starting from home page
+     * Encapsulates the logic previously in test helper
+     */
+    async addProductFromHome(homePage: HomePage, productName: string): Promise<void> {
+        await homePage.navigate();
+        await homePage.selectProduct(productName);
+        await this.waitForPageLoad();
+        await this.addToCart();
+    }
+
+    private async waitForPageLoad(): Promise<void> {
+        await this.addToCartButton.waitFor({ state: 'visible' });
+        await this.productName.waitFor({ state: 'visible' });
     }
 
     async goToCart(): Promise<void> {

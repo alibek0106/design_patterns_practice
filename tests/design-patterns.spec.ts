@@ -52,7 +52,7 @@ class PurchaseMonitorFlow extends AbstractTestFlow {
         await this.productPage.addToCart();
         await this.productPage.goToCart();
         const isInCart = await this.cartPage.isProductInCart(this.targetProduct);
-        expect(isInCart).toBeTruthy();
+        expect(isInCart, 'Product should be in cart').toBeTruthy();
     }
 }
 

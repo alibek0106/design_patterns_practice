@@ -29,7 +29,14 @@ jobs:
           BASE_URL: ${{ secrets.BASE_URL || 'https://www.demoblaze.com' }}
           
       - name: Commit and Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: update visual test snapshots [skip ci]"
-          file_pattern: 'tests/visual/**/*.png'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/visual/**/*.png
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to visual snapshots found."
+            exit 0
+          fi
+          
+          git commit -m"chore: update visual test snapshots [skip ci]"
+          git push origin HEAD:${{ github.ref }}
